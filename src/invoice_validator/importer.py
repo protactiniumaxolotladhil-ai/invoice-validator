@@ -10,12 +10,10 @@ def parse_date(s: str) -> date:
 def parse_amount(s: str) -> Decimal:
     if s == "":
         raise ValueError("Amount cannot be blank")
-    val = float(s)
-    rounded = round(val, 2)
-    return Decimal(str(rounded))
+    return Decimal(s.strip()).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
 def compute_total(net: Decimal, discount: Decimal, vat_rate: float = 0.16) -> Decimal:
-    total = net * Decimal(str(1 + vat_rate)) - discount
+    total = (net - discount) * Decimal(str(1 + vat_rate))
     return total.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
 
