@@ -4,7 +4,7 @@ from decimal import Decimal, ROUND_HALF_UP
 
 
 def parse_date(s: str) -> date:
-    return datetime.strptime(s, "%m/%d/%Y").date()
+    return datetime.strptime(s, "%d/%m/%Y").date()
 
 
 def parse_amount(s: str) -> Decimal:
