@@ -23,9 +23,14 @@ def import_invoices(path: str):
 
     with open(path, mode="r", encoding="utf-8") as f:
         reader = csv.DictReader(f)
+        seen_ids = set()
         for row_idx, row in enumerate(reader, start=1):
+            if row["invoice_id"].strip() in seen_ids:
+                errors.append({"row": row_idx, "reason": "Duplicate invoice ID"})
+                continue
             if not row.get("net_amount") or row["net_amount"].strip() == "":
-                raise ValueError("Blank net amount")
+               errors.append({"row": row_idx, "reason": "Blank net amount"})
+               continue
 
             try:
                 invoice_id = row["invoice_id"].strip()
@@ -46,6 +51,7 @@ def import_invoices(path: str):
                         "total": total,
                     }
                 )
+                seen_ids.add(invoice_id)
             except Exception as e:
                 errors.append({"row": row_idx, "reason": str(e)})
 

@@ -51,3 +51,15 @@ def test_import_blank_amount(tmp_path):
 
 def test_compute_total_zero_discount():
     assert compute_total(Decimal("500.00"), Decimal("0.00")) == Decimal("580.00")
+    
+
+@pytest.mark.parametrize("raw, expected", [("2.675", 2.68), ("0.004", "0.00")])
+def test_parse_amount_edges(raw, expected):
+    assert parse_amount(raw) == Decimal(str(expected))
+    
+    
+def test_parse_date_day_over_12():
+    assert parse_date("31/12/2026") == date(2026, 12, 31)
+    
+def test_compute_total_full_discount():
+    assert compute_total(Decimal("1000.00"), Decimal("1000.00")) == Decimal("0.00")
