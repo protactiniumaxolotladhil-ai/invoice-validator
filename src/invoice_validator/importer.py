@@ -4,18 +4,16 @@ from decimal import Decimal, ROUND_HALF_UP
 
 
 def parse_date(s: str) -> date:
-    return datetime.strptime(s, "%m/%d/%Y").date()
+    return datetime.strptime(s, "%d/%m/%Y").date()
 
 
 def parse_amount(s: str) -> Decimal:
     if s == "":
         raise ValueError("Amount cannot be blank")
-    val = float(s)
-    rounded = round(val, 2)
-    return Decimal(str(rounded))
+    return Decimal(s.strip()).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
 def compute_total(net: Decimal, discount: Decimal, vat_rate: float = 0.16) -> Decimal:
-    total = net * Decimal(str(1 + vat_rate)) - discount
+    total = (net - discount) * Decimal(str(1 + vat_rate))
     return total.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
 
@@ -25,9 +23,14 @@ def import_invoices(path: str):
 
     with open(path, mode="r", encoding="utf-8") as f:
         reader = csv.DictReader(f)
+        seen_ids = set()
         for row_idx, row in enumerate(reader, start=1):
+            if row["invoice_id"].strip() in seen_ids:
+                errors.append({"row": row_idx, "reason": "Duplicate invoice ID"})
+                continue
             if not row.get("net_amount") or row["net_amount"].strip() == "":
-                raise ValueError("Blank net amount")
+               errors.append({"row": row_idx, "reason": "Blank net amount"})
+               continue
 
             try:
                 invoice_id = row["invoice_id"].strip()
@@ -48,6 +51,7 @@ def import_invoices(path: str):
                         "total": total,
                     }
                 )
+                seen_ids.add(invoice_id)
             except Exception as e:
                 errors.append({"row": row_idx, "reason": str(e)})
 
